@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:gpt_image_to_text/homepage/widget/picker_card_widget.dart';
@@ -12,11 +13,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  File? _image;
+  Uint8List? _image;
   late bool formCamera;
 
   void _getImage(bool formCamera) async{
-    File? image;
+    Uint8List? image;
     MyImagePicker picker=MyImagePicker();
 
     if(formCamera){
@@ -47,7 +48,7 @@ class _HomePageState extends State<HomePage> {
               SizedBox.shrink():
               ClipRRect(
                 borderRadius: BorderRadius.circular(32),
-                child: Image.file(
+                child: Image.memory(
                     _image!,
                     height: 200,
                     width: 200,
