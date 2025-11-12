@@ -39,6 +39,8 @@ dependencies:
   flutter_dotenv: ^6.0.0
   flutter_secure_storage: ^9.2.4
   dart_openai: ^6.1.0
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^3.0.3
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +52,10 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  riverpod_generator: ^3.0.3
+  build_runner: ^2.7.1
+  custom_lint: ^0.8.0
+  riverpod_lint: ^3.0.3
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
