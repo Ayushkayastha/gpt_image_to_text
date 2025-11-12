@@ -1,4 +1,5 @@
 # Miscellaneous
+.envso
 *.class
 *.log
 *.pyc

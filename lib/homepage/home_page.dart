@@ -2,8 +2,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:gpt_image_to_text/homepage/widget/picker_card_widget.dart';
 import 'package:gpt_image_to_text/core/my_image_picker.dart';
+
+import '../core/gpt_api.dart';
+import '../core/secure_storage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,12 +18,34 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   Uint8List? _image;
+  String? _gptResponse;
   late bool formCamera;
+  bool _isLoading = false;
+
+
+  void _sendImageToGpt(Uint8List image) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    GptApi api = GptApi();
+    Map<String, dynamic> response = await api.getImageResponse(image);
+
+    setState(() {
+      _isLoading = false;
+      if (response.containsKey('responseText')) {
+        _gptResponse = response['responseText'];
+      } else if (response.containsKey('error')) {
+        _gptResponse = 'Error: ${response['error']}';
+      } else {
+        _gptResponse = 'Unknown error occurred';
+      }
+    });
+  }
 
   void _getImage(bool formCamera) async{
     Uint8List? image;
     MyImagePicker picker=MyImagePicker();
-
     if(formCamera){
       image= await picker.pickImageFromCamera();
     }
@@ -30,7 +56,9 @@ class _HomePageState extends State<HomePage> {
     if(image!=null){
       setState(() {
         _image=image;
+        _gptResponse = null; // clear old response
       });
+      _sendImageToGpt(image);
     }
     else{
       print('error fetching image form gallery or camera');
@@ -70,7 +98,23 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
 
+          ),
+          SizedBox(height: 12),
+          _isLoading
+              ? SizedBox.shrink()
+              : _gptResponse != null
+              ? Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              _gptResponse!,
+              style: TextStyle(fontSize: 16),
+            ),
           )
+              : SizedBox.shrink(),
         ],
       ),
     );
