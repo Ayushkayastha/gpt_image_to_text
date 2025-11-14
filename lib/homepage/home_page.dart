@@ -30,6 +30,11 @@ class _HomePageState extends State<HomePage> {
 
     GptApi api = GptApi();
     Map<String, dynamic> response = await api.getImageResponse(image);
+    print('''
+        promptTokens: ${response['promptTokens']}
+        completionTokens: ${response['completionTokens']}
+        totalTokens: ${response['totalTokens']}
+        ''');
 
     setState(() {
       _isLoading = false;

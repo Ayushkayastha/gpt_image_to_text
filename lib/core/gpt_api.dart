@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -23,13 +24,25 @@ class GptApi {
       {
         'role': 'system',
         'content': [
-          {'type': 'text', 'text': 'You are a calorie estimation assistant. Only reply with calories and food details.'}
-        ]
+          {
+            'type': 'text',
+            'text': '''
+            You are a calorie estimation expert. Output only the values in this exact CSV order:
+Name, Serving Size, Serving Unit, Calories (kcal), Protein (g), Carbs (g), Fats (g), Fiber (g), Health Score (0-10)
+
+Rules:
+- No labels, no extra text.
+- If exact data unknown, give best estimate. Only if impossible, use a range.
+Output: value1,value2,value3,value4,value5,value6,value7,value8,value9
+'''
+
+          }
+          ]
       },
       {
         'role': 'user',
         'content': [
-          {'type': 'text', 'text': 'Estimate the calories in this food and give a short description.'},
+          {'type': 'text', 'text': 'Estimate the calories in this food'},
           {
             'type': 'image_url',
             'image_url': {
@@ -47,22 +60,25 @@ class GptApi {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('https://api.openai.com/v1/chat/completions'),
-        headers: {
-          'Authorization': 'Bearer $apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: body,
+      final dio= Dio();
+      final response = await dio.post(
+        'https://api.openai.com/v1/chat/completions',
+        data: body,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+        ),
       );
 
       if (response.statusCode != 200) {
-        final errorBody = jsonDecode(response.body);
-        print(' GPT Error: ${response.statusCode} - ${errorBody['error']?['message'] ?? response.body}');
-        return {'error': 'API Error ${response.statusCode}: ${errorBody['error']?['message'] ?? 'Unknown' }'};
+        final errorData = response.data is Map ? response.data : {'error': {'message': response.statusMessage}};
+        print(' GPT Error: ${response.statusCode} - ${errorData['error']?['message'] ?? response.data}');
+        return {'error': 'API Error ${response.statusCode}: ${errorData['error']?['message'] ?? 'Unknown' }'};
       }
 
-      final data = jsonDecode(response.body);
+      final data = response.data;
       final responseText = data['choices']?[0]?['message']?['content'] ?? 'No response';
 
       final usage = data['usage'] ?? {};
@@ -77,6 +93,10 @@ class GptApi {
         'completionTokens': completionTokens,
         'totalTokens': totalTokens,
       };
+    } on DioException catch (e) {
+      print(' GPT Error (Dio): ${e.response?.statusCode} - ${e.message}');
+      final errorMsg = e.response?.data?['error']?['message'] ?? e.message ?? 'Unknown Dio error';
+      return {'error': 'Dio Error: $errorMsg'};
     } catch (e) {
       print('GPT Error: $e');
       return {'error': e.toString()};

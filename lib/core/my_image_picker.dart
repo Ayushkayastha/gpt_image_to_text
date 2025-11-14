@@ -38,9 +38,9 @@ class MyImagePicker{
   }
 
   Uint8List? resizeImage({required File file}){
-    int maxWidth=1024;
-    int maxHeight=1024;
-    int imgQuality=85;
+    int maxWidth = 1024;
+    int maxHeight = 1024;
+    int imgQuality = 75;
 
     //synchronosly reads the image and returns list of numbers(0-255) image in number
     List<int> imageBytes = file.readAsBytesSync();
